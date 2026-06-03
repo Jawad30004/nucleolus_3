@@ -1,0 +1,1492 @@
+import React, { useState, useEffect, useRef } from 'react';
+
+// --- MCQ DATA WITH CONCISE MDCAT EXPLANATIONS ---
+const QUIZ_QUESTIONS = [
+  {
+    id: 1,
+    question: "Which component of the nucleolus serves as the site of inactive rDNA genes?",
+    options: [
+      { text: "Granular Component (GC)", isCorrect: false },
+      { text: "Fibrillar Centre (FC)", isCorrect: true },
+      { text: "Dense Fibrillar Component (DFC)", isCorrect: false },
+      { text: "Nucleolar Organizer Region (NOR) of chromosome 10", isCorrect: false }
+    ],
+    hint: "Think of the pale-staining central region that organizes ribosomal gene transcription.",
+    explanation: "The Fibrillar Centre (FC) is a pale-staining, central region containing inactive rDNA genes and RNA Polymerase I, serving as a transcription reservoir."
+  },
+  {
+    id: 2,
+    question: "During which stage of cell division does the nucleolus completely disassemble and disappear?",
+    options: [
+      { text: "Anaphase", isCorrect: false },
+      { text: "Metaphase", isCorrect: false },
+      { text: "Prophase", isCorrect: true },
+      { text: "Telophase", isCorrect: false }
+    ],
+    hint: "This is when chromatin condenses and general transcription halts.",
+    explanation: "During prophase, chromatin condensation halts rDNA transcription, leading to the disassembly and disappearance of the nucleolus."
+  },
+  {
+    id: 3,
+    question: "A student is observing active transcription of rDNA under an electron microscope. Which specific zone of the nucleolus is being observed?",
+    options: [
+      { text: "Granular Component (GC)", isCorrect: false },
+      { text: "Fibrillar Centre (FC)", isCorrect: false },
+      { text: "Dense Fibrillar Component (DFC)", isCorrect: true },
+      { text: "Nuclear Envelope", isCorrect: false }
+    ],
+    hint: "It is the dark, electron-dense region surrounding the pale-staining center.",
+    explanation: "The Dense Fibrillar Component (DFC) is the site of active rDNA transcription and contains newly synthesized 45S pre-rRNA."
+  },
+  {
+    id: 4,
+    question: "How many human nucleolar organizer regions (NORs) are typically present in a diploid somatic cell during interphase?",
+    options: [
+      { text: "5 NORs", isCorrect: false },
+      { text: "10 NORs", isCorrect: true },
+      { text: "23 NORs", isCorrect: false },
+      { text: "46 NORs", isCorrect: false }
+    ],
+    hint: "NORs are located on specific pairs of acrocentric chromosomes. Think of the total number across these homologous pairs.",
+    explanation: "Humans have 5 pairs of acrocentric chromosomes (13, 14, 15, 21, and 22) that contain NORs, resulting in a total of 10 NORs in a diploid cell."
+  },
+  {
+    id: 5,
+    question: "Which eukaryotic rRNA is transcribed in the nucleoplasm and must be actively imported into the nucleolus?",
+    options: [
+      { text: "18S rRNA", isCorrect: false },
+      { text: "28S rRNA", isCorrect: false },
+      { text: "5.8S rRNA", isCorrect: false },
+      { text: "5S rRNA", isCorrect: true }
+    ],
+    hint: "This is the classic High-Yield Exception. It is transcribed by RNA Polymerase III.",
+    explanation: "Unlike other rRNAs, 5S rRNA is transcribed outside the nucleolus in the nucleoplasm by RNA Polymerase III and then imported into the nucleolus."
+  },
+  {
+    id: 6,
+    question: "If RNA Polymerase I is selectively inhibited in a cell, which ribosomal component will fail to be synthesized?",
+    options: [
+      { text: "5S rRNA", isCorrect: false },
+      { text: "80S rRNA", isCorrect: false },
+      { text: "45S rRNA", isCorrect: true },
+      { text: "tRNA", isCorrect: false }
+    ],
+    hint: "Recall which specific rRNA is produced.",
+    explanation: "RNA Polymerase I is responsible for the transcription of 45S rRNA in the nucleolus. Inhibiting it selectively blocks 45S rRNA production."
+  },
+  {
+    id: 7,
+    question: "Which of the following describes the correct molecular composition of the eukaryotic 40S small ribosomal subunit?",
+    options: [
+      { text: "18S rRNA + Ribosomal proteins", isCorrect: true },
+      { text: "28S rRNA + 5S rRNA + Ribosomal proteins", isCorrect: false },
+      { text: "18S rRNA + 5.8S rRNA + Ribosomal proteins", isCorrect: false },
+      { text: "28S rRNA + 5.8S rRNA + 5S rRNA + Ribosomal proteins", isCorrect: false }
+    ],
+    hint: "The small subunit contains only a single type of mature rRNA molecule.",
+    explanation: "The eukaryotic 40S small subunit is composed of 18S rRNA and approximately 30-35 ribosomal proteins."
+  },
+  {
+    id: 8,
+    question: "What is the structural basis for the nucleolus's disassembly during prophase of mitosis?",
+    options: [
+      { text: "Direct enzymatic digestion by lysosomal nucleases", isCorrect: false },
+      { text: "No, the nucleolus remains intact", isCorrect: false },
+      { text: "Condensation of chromatin blocking the transcription of rDNA", isCorrect: true },
+      { text: "Passive export of all nucleolar proteins into the extracellular matrix", isCorrect: false }
+    ],
+    hint: "Consider how transcription of ribosomal RNA genes relates to nucleolar integrity.",
+    explanation: "As chromosomes condense during prophase, the transcription of rDNA halts, causing the nucleolar structure (which is built around active transcription) to disassemble."
+  },
+  {
+    id: 9,
+    question: "The assembly of the 60S large ribosomal subunit takes place in which specific ultrastructural region of the nucleolus?",
+    options: [
+      { text: "Fibrillar Centre (FC)", isCorrect: false },
+      { text: "Dense Fibrillar Component (DFC)", isCorrect: false },
+      { text: "Granular Component (GC)", isCorrect: true },
+      { text: "Cytoplasmic Ribosomes", isCorrect: false }
+    ],
+    hint: "This is the outermost, particle-dense zone of the nucleolus.",
+    explanation: "The Granular Component (GC) is the site of ribosomal subunit assembly where mature rRNAs and imported proteins form the 40S and 60S precursor subunits."
+  },
+  {
+    id: 10,
+    question: "Which ion is strictly required in the cytoplasm for the 40S and 60S subunits to combine into a functional 80S ribosome?",
+    options: [
+      { text: "Ca²⁺", isCorrect: false },
+      { text: "Mg²⁺", isCorrect: true },
+      { text: "Na⁺", isCorrect: false },
+      { text: "Fe²⁺", isCorrect: false }
+    ],
+    hint: "This divalent cation stabilizes the interaction between the phosphate backbones of the two subunits.",
+    explanation: "The association of ribosomal subunits (40S and 60S) to form the functional 80S ribosome during translation requires an optimal concentration of Mg²⁺ ions."
+  },
+  {
+    id: 11,
+    question: "Which of the following components constitutes the largest percentage by weight in the chemical composition of the nucleolus?",
+    options: [
+      { text: "RNA (10%)", isCorrect: false },
+      { text: "DNA (5%)", isCorrect: false },
+      { text: "Proteins (85%)", isCorrect: true },
+      { text: "Phospholipids and Calcium ions (1%)", isCorrect: false }
+    ],
+    hint: "Despite its role in RNA synthesis, the nucleolus is packed with transcription factors, ribosomal proteins, and modifying enzymes.",
+    explanation: "The chemical composition of the nucleolus is approximately 85% proteins, 10% RNA, and 5% DNA, reflecting its high density of proteinaceous processing machinery."
+  },
+  {
+    id: 12,
+    question: "If a mutation inactivates the nucleolar organizer regions (NORs) on chromosome 21, which of the following processes will be directly impaired?",
+    options: [
+      { text: "Synthesis of 5S rRNA", isCorrect: false },
+      { text: "Reassembly of nucleoli during telophase", isCorrect: true },
+      { text: "Nuclear pore complex formation", isCorrect: false },
+      { text: "Translation of mRNA in the cytoplasm", isCorrect: false }
+    ],
+    hint: "NORs are loops of DNA containing rDNA genes around which the nucleolus forms.",
+    explanation: "NORs are the organizing chromosomal templates around which the nucleolar components cluster and reassemble during telophase."
+  },
+  {
+    id: 13,
+    question: "The nucleolus is NOT membrane-bound. This structural characteristic implies that:",
+    options: [
+      { text: "It cannot exchange molecules with the rest of the nucleoplasm", isCorrect: false },
+      { text: "It is a highly dynamic structure that can readily disassemble and reassemble", isCorrect: true },
+      { text: "It is structurally unstable and prone to degradation", isCorrect: false },
+      { text: "It relies on active transport for all lipid-soluble molecules", isCorrect: false }
+    ],
+    hint: "Think about how it behaves during mitosis compared to membrane-bound organelles like mitochondria.",
+    explanation: "The lack of a membrane allows the nucleolus to exist as a dynamic, self-assembling macromolecular aggregate that can quickly dissolve and reform during the cell cycle."
+  },
+  {
+    id: 14,
+    question: "Which enzyme is responsible for transcribing the 45S pre-rRNA in the Dense Fibrillar Component (DFC)?",
+    options: [
+      { text: "RNA Polymerase I", isCorrect: true },
+      { text: "RNA Polymerase II", isCorrect: false },
+      { text: "RNA Polymerase III", isCorrect: false },
+      { text: "DNA Polymerase Alpha", isCorrect: false }
+    ],
+    hint: "This enzyme specifically transcribes high-molecular-weight ribosomal RNA precursor genes.",
+    explanation: "RNA Polymerase I transcribes the rDNA genes to produce the single large 45S pre-rRNA precursor in the nucleolar DFC zone."
+  },
+  {
+    id: 15,
+    question: "In which of the following human cells would you expect to find the smallest or entirely absent nucleoli?",
+    options: [
+      { text: "Active secretory cells of the pancreas", isCorrect: false },
+      { text: "Developing oocytes", isCorrect: false },
+      { text: "Sperm cells and mature muscle cells", isCorrect: true },
+      { text: "Rapidly dividing embryonic stem cells", isCorrect: false }
+    ],
+    hint: "Think of cells with extremely low metabolic or protein synthesis demands.",
+    explanation: "The size and number of nucleoli are directly proportional to the cell's metabolic and protein synthesis activity. They are minimal or absent in mature muscle and sperm cells."
+  },
+  {
+    id: 16,
+    question: "The initial enzymatic cleavage and processing of the 45S pre-rRNA precursor molecule occurs in which zone?",
+    options: [
+      { text: "Fibrillar Centre (FC)", isCorrect: false },
+      { text: "Dense Fibrillar Component (DFC)", isCorrect: true },
+      { text: "Granular Component (GC)", isCorrect: false },
+      { text: "Cytoplasmic Ribosomes", isCorrect: false }
+    ],
+    hint: "This region contains both newly synthesized pre-rRNA and is rich in small nucleolar RNPs (snoRNPs).",
+    explanation: "The DFC is specialized for both active transcription of rDNA and the initial processing, cleavage, and modification of the 45S pre-rRNA."
+  },
+  {
+    id: 17,
+    question: "Which of the following represents the correct set of human chromosomes containing Nucleolar Organizer Regions (NORs)?",
+    options: [
+      { text: "Chromosomes 1, 2, 3, 4, and 5", isCorrect: false },
+      { text: "Chromosomes 13, 14, 15, 21, and 22", isCorrect: true },
+      { text: "Chromosomes 11, 12, 16, 19, and 20", isCorrect: false },
+      { text: "Chromosomes X, Y, 13, 14, and 15", isCorrect: false }
+    ],
+    hint: "NORs are located on the short arms of the 5 pairs of human acrocentric chromosomes.",
+    explanation: "Human NORs are located on the acrocentric chromosomes: 13, 14, 15, 21, and 22."
+  },
+  {
+    id: 18,
+    question: "What is the fate of ribosomal proteins immediately after they are synthesized in the cytoplasm?",
+    options: [
+      { text: "They are integrated directly into cytoplasmic ribosomes during translation", isCorrect: false },
+      { text: "They enter the nuclear membrane and remain in the nuclear envelope", isCorrect: false },
+      { text: "They are imported through nuclear pores into the nucleolus", isCorrect: true },
+      { text: "They are secreted out of the cell via exocytosis", isCorrect: false }
+    ],
+    hint: "Subunit assembly requires these proteins to meet the rRNAs inside the nucleolus.",
+    explanation: "Ribosomal proteins are translated on cytoplasmic ribosomes, then immediately imported through nuclear pores into the nucleolus for subunit assembly."
+  },
+  {
+    id: 19,
+    question: "What would be the direct consequence of removing 45S rRNA from the Dense Fibrillar Component?",
+    options: [
+      { text: "Failure of rDNA gene replication", isCorrect: false },
+      { text: "Complete blockade of 5S rRNA transcription in the nucleoplasm", isCorrect: false },
+      { text: "Failure of 45S pre-rRNA cleavage and modification", isCorrect: true },
+      { text: "Impaired export of mature 80S ribosomes through nuclear pores", isCorrect: false }
+    ],
+    hint: "Focus on the role of 45s rRNA.",
+    explanation: "45s rRNA reside in the DFC and are essential for making other mature rRNAs."
+  },
+  {
+    id: 20,
+    question: "Which mature ribosomal RNA species are generated directly from the cleavage of the single 45S pre-rRNA transcript?",
+    options: [
+      { text: "18S, 5.8S, and 28S rRNAs", isCorrect: true },
+      { text: "18S, 5S, and 28S rRNAs", isCorrect: false },
+      { text: "5S, 5.8S, and 28S rRNAs", isCorrect: false },
+      { text: "18S, 5S, and 5.8S rRNAs", isCorrect: false }
+    ],
+    hint: "Remember that one of the four eukaryotic rRNAs is transcribed independently outside the nucleolus.",
+    explanation: "The 45S pre-rRNA is a large precursor molecule that is enzymatically cleaved and processed to yield the mature 18S, 5.8S, and 28S rRNAs."
+  },
+  {
+    id: 21,
+    question: "If a cell has very high metabolic activity (such as a neuron or secretory cell), how is its nucleolar morphology affected?",
+    options: [
+      { text: "It has a single, highly condensed, and inactive nucleolus", isCorrect: false },
+      { text: "It contains larger or multiple active nucleoli", isCorrect: true },
+      { text: "The nucleolus is replaced by free nuclear ribosomes", isCorrect: false },
+      { text: "The nucleolar organizer regions migrate out of the nucleus", isCorrect: false }
+    ],
+    hint: "High metabolism requires massive ribosome production to support protein synthesis.",
+    explanation: "Highly active metabolic cells require rapid ribosome production, resulting in enlarged or multiple prominent nucleoli to maximize rDNA transcription."
+  },
+  {
+    id: 22,
+    question: "During telophase, nucleolar components cluster around NORs specifically located on which type of chromosomes?",
+    options: [
+      { text: "Metacentric chromosomes", isCorrect: false },
+      { text: "Submetacentric chromosomes", isCorrect: false },
+      { text: "Acrocentric chromosomes", isCorrect: true },
+      { text: "Telocentric chromosomes", isCorrect: false }
+    ],
+    hint: "These are chromosomes with centromeres located near one end, producing a very short p-arm.",
+    explanation: "Human NORs are located on the short arms of acrocentric chromosomes, around which the nucleolus reorganizes and reassembles during telophase."
+  },
+  {
+    id: 23,
+    question: "Which of the following is NOT a direct enzyme or macromolecule involved in nucleolar ribosome biogenesis?",
+    options: [
+      { text: "RNA Polymerase I", isCorrect: false },
+      { text: "Mitochondria", isCorrect: true },
+      { text: "snoRNPs", isCorrect: false },
+      { text: "rDNA templates", isCorrect: false }
+    ],
+    hint: "Focus on structure of nucleolus",
+    explanation: "Mitochondrion is a separate organelle and is not involved in ribosomes synthesis."
+  },
+  {
+    id: 24,
+    question: "How many distinct types of eukaryotic rRNAs are incorporated into a fully functional 80S ribosome?",
+    options: [
+      { text: "2 types", isCorrect: false },
+      { text: "3 types", isCorrect: false },
+      { text: "4 types", isCorrect: true },
+      { text: "5 types", isCorrect: false }
+    ],
+    hint: "Count both the rRNAs in the small (40S) subunit and those in the large (60S) subunit.",
+    explanation: "A functional 80S ribosome contains 4 different types of rRNAs: 18S (in the 40S subunit) and 28S, 5.8S, and 5S (in the 60S subunit)."
+  },
+  {
+    id: 25,
+    question: "What is the correct biological path of a ribosomal protein from its synthesis to its incorporation into a ribosome?",
+    options: [
+      { text: "Cytoplasm → Nucleolus", isCorrect: true },
+      { text: "Nucleolus → Cytoplasm → Nucleus", isCorrect: false },
+      { text: "Cytoplasm → Endoplasmic Reticulum → Golgi apparatus", isCorrect: false },
+      { text: "Nucleolus → Endoplasmic Reticulum → Cytoplasm", isCorrect: false }
+    ],
+    hint: "It must be translated first, then assemble with rRNAs.",
+    explanation: "Ribosomal proteins are synthesized in the cytoplasm, imported into the nucleolus for assembly into subunits, and then exported back to the cytoplasm as part of mature subunits."
+  },
+  {
+    id: 26,
+    question: "The pale-staining nature of the Fibrillar Centre (FC) under electron microscopy is primarily because:",
+    options: [
+      { text: "It is composed entirely of thick lipid bilayer components", isCorrect: false },
+      { text: "It contains inactive, non-transcribed rDNA genes waiting to be organized", isCorrect: true },
+      { text: "It is highly packed with active ribonucleoprotein particles (RNPs)", isCorrect: false },
+      { text: "It lacks any DNA, containing only imported calcium and magnesium ions", isCorrect: false }
+    ],
+    hint: "Compare this to the Dense Fibrillar Component (DFC) where active, dense transcription is occurring.",
+    explanation: "The FC contains transcriptionally inactive rDNA genes, which stain more lightly than the densely packed, actively transcribing DFC surround."
+  },
+  {
+    id: 27,
+    question: "Which nucleolar region is correctly matched with its active molecular function?",
+    options: [
+      { text: "Fibrillar Centre — Active 45S pre-rRNA cleavage", isCorrect: false },
+      { text: "Dense Fibrillar Component — Inactive gene reservoir", isCorrect: false },
+      { text: "Granular Component — Assembly of precursor 40S and 60S subunits", isCorrect: true },
+      { text: "Nucleoplasm — Complete 80S ribosome assembly during interphase", isCorrect: false }
+    ],
+    hint: "Subunit construction occurs in the outer granular part of the nucleolus.",
+    explanation: "The Granular Component (GC) hosts the maturing ribosomal subunits and ribosomal proteins, serving as the site of 40S and 60S precursor assembly."
+  },
+  {
+    id: 28,
+    question: "Why is ribosome biogenesis/synthesis characterized as a coordinated nucleo-cytoplasmic process?",
+    options: [
+      { text: "It requires transcription of mRNA in the nucleolus followed by transport to the cytoplasm", isCorrect: false },
+      { text: "It requires translation of ribosomal proteins in the cytoplasm, transcription in the nucleolus, and subunit assembly in nucleolus before final export", isCorrect: true },
+      { text: "It requires active ribosomes to translocate from the cytoplasm back into the nucleus", isCorrect: false },
+      { text: "It is controlled entirely by cytosolic mitochondria and chloroplasts", isCorrect: false }
+    ],
+    hint: "Think about the shuttle of ribosomal proteins inward and the shuttle of assembled subunits outward.",
+    explanation: "Ribosomal proteins must be made in the cytoplasm, transported into the nucleolus to meet the locally transcribed rRNAs, assembled, and then returned to the cytoplasm."
+  },
+  {
+    id: 29,
+    question: "What is the primary evolutionary or structural reason why eukaryotic 5S rRNA is synthesized in the nucleoplasm rather than the nucleolus?",
+    options: [
+      { text: "It is transcribed by RNA Polymerase II on chromosome one", isCorrect: true },
+      { text: "It is transcribed by RNA Polymerase I alongside the other three rRNAs", isCorrect: false },
+      { text: "It requires a special membrane bound environment inside the nuclear envelope", isCorrect: false },
+      { text: "It is actually synthesized in the cytoplasm and never enters the nucleolus", isCorrect: false }
+    ],
+    hint: "5S rRNA genes are clustered on chromosome 1 (in humans), which is not an acrocentric chromosome, and use a different polymerase.",
+    explanation: "5S rRNA genes are located outside the NORs (on chromosome 1) and are transcribed by RNA Polymerase III in the nucleoplasm, separate from the 45S transcription unit."
+  },
+  {
+    id: 30,
+    question: "Which of the following chemical components represents approximately 5% of the total nucleolar composition?",
+    options: [
+      { text: "Proteins", isCorrect: false },
+      { text: "RNA", isCorrect: false },
+      { text: "DNA", isCorrect: true },
+      { text: "Lipids", isCorrect: false }
+    ],
+    hint: "This component forms the template for all ribosomal RNA transcription.",
+    explanation: "The nucleolus is composed of 85% protein, 10% RNA, and 5% DNA (which contains the active and inactive rDNA genes)."
+  }
+];
+
+export default function App() {
+  // --- STATE ---
+  const [theme, setTheme] = useState('dark'); // 'dark' | 'light'
+  const [screen, setScreen] = useState('welcome'); // 'welcome' | 'quiz' | 'results'
+  
+  // Student Info
+  const [fullName, setFullName] = useState('');
+  const [fatherName, setFatherName] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
+  
+  // Quiz Engine
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [answers, setAnswers] = useState({}); // { questionIndex: optionIndex }
+  const [visited, setVisited] = useState({ 0: true }); // Tracks questions that the user has looked at
+  const [timeLeft, setTimeLeft] = useState(1800); // 30 minutes in seconds
+  const [isTimerActive, setIsTimerActive] = useState(false);
+  const [showConfirmSubmit, setShowConfirmSubmit] = useState(false);
+  
+  // Result Analysis
+  const [quizScore, setQuizScore] = useState({
+    correct: 0,
+    incorrect: 0,
+    unattempted: 0,
+    obtainedMarks: 0,
+    percentage: 0,
+    total: QUIZ_QUESTIONS.length
+  });
+
+  // Hints tracker
+  const [showHint, setShowHint] = useState(false);
+
+  // Security toggles/states (optional but requested)
+  const [antiCopy, setAntiCopy] = useState(true);
+
+  // --- TIMER EFFECT ---
+  useEffect(() => {
+    let interval = null;
+    if (isTimerActive && timeLeft > 0) {
+      interval = setInterval(() => {
+        setTimeLeft((prev) => prev - 1);
+      }, 1000);
+    } else if (timeLeft === 0 && isTimerActive) {
+      handleAutoSubmit();
+    }
+    return () => clearInterval(interval);
+  }, [isTimerActive, timeLeft]);
+
+  // --- ANTI-COPY & INSPECT PROTECTION ---
+  useEffect(() => {
+    if (!antiCopy) return;
+    
+    const handleContextMenu = (e) => {
+      e.preventDefault();
+    };
+
+    const handleKeyDown = (e) => {
+      // Disable F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U, Ctrl+C
+      if (
+        e.keyCode === 123 || 
+        (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) || 
+        (e.ctrlKey && e.keyCode === 85) || 
+        (e.ctrlKey && e.keyCode === 67)
+      ) {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener('contextmenu', handleContextMenu);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('contextmenu', handleContextMenu);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [antiCopy]);
+
+  // --- HANDLERS ---
+  const handleStartQuiz = (e) => {
+    e.preventDefault();
+    if (!fullName.trim()) {
+      setErrorMsg('Full Name is required.');
+      return;
+    }
+    if (!fatherName.trim()) {
+      setErrorMsg("Father's Name is required.");
+      return;
+    }
+    setErrorMsg('');
+    setScreen('quiz');
+    setIsTimerActive(true);
+    setTimeLeft(1800); // Reset to 30 mins
+    setAnswers({});
+    setCurrentQuestionIndex(0);
+    setVisited({ 0: true });
+  };
+
+  const handleSelectOption = (questionIdx, optionIdx) => {
+    setAnswers(prev => ({
+      ...prev,
+      [questionIdx]: optionIdx
+    }));
+  };
+
+  const handleNext = () => {
+    if (currentQuestionIndex < QUIZ_QUESTIONS.length - 1) {
+      const nextIndex = currentQuestionIndex + 1;
+      setCurrentQuestionIndex(nextIndex);
+      setVisited(prev => ({ ...prev, [nextIndex]: true }));
+      setShowHint(false);
+    }
+  };
+
+  const handlePrev = () => {
+    if (currentQuestionIndex > 0) {
+      const prevIndex = currentQuestionIndex - 1;
+      setCurrentQuestionIndex(prevIndex);
+      setVisited(prev => ({ ...prev, [prevIndex]: true }));
+      setShowHint(false);
+    }
+  };
+
+  const handleJumpToQuestion = (idx) => {
+    setCurrentQuestionIndex(idx);
+    setVisited(prev => ({ ...prev, [idx]: true }));
+    setShowHint(false);
+  };
+
+  const handleAutoSubmit = () => {
+    setIsTimerActive(false);
+    calculateResults();
+    setScreen('results');
+  };
+
+  const calculateResults = () => {
+    let correct = 0;
+    let incorrect = 0;
+    let unattempted = 0;
+
+    QUIZ_QUESTIONS.forEach((q, idx) => {
+      const selectedIdx = answers[idx];
+      if (selectedIdx === undefined) {
+        unattempted++;
+      } else {
+        if (q.options[selectedIdx].isCorrect) {
+          correct++;
+        } else {
+          incorrect++;
+        }
+      }
+    });
+
+    const total = QUIZ_QUESTIONS.length;
+    const percentage = Math.round((correct / total) * 100);
+
+    setQuizScore({
+      correct,
+      incorrect,
+      unattempted,
+      obtainedMarks: correct,
+      percentage,
+      total
+    });
+  };
+
+  const triggerManualSubmit = () => {
+    setShowConfirmSubmit(false);
+    setIsTimerActive(false);
+    calculateResults();
+    setScreen('results');
+  };
+
+  const handleRetakeQuiz = () => {
+    setScreen('welcome');
+    setAnswers({});
+    setCurrentQuestionIndex(0);
+    setVisited({ 0: true });
+    setTimeLeft(1800);
+  };
+
+  // --- MODERN PDF / PRINT REPORT EXPORT ---
+  // Rather than relying on buggy canvas libraries which break, we use a beautiful, dedicated printable layout
+  // built into CSS that translates directly into a gorgeous, high-fidelity PDF output when printed.
+  const handlePrintResult = () => {
+    window.print();
+  };
+
+  // --- TIME FORMATTER ---
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // --- SVG CCA LOGO COMPONENT ---
+  const CCALogo = ({ className = "h-12 w-12" }) => (
+    <svg className={className} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="50" cy="50" r="45" fill="url(#logoGrad)" stroke="#06B6D4" strokeWidth="2"/>
+      {/* Abstract elegant Biology DNA ribbon / Nucleolus representation */}
+      <circle cx="50" cy="50" r="16" fill="#06B6D4" fillOpacity="0.2" className="animate-pulse" />
+      <circle cx="50" cy="50" r="10" fill="#2563EB" />
+      {/* Ribosomal protein dots around */}
+      <circle cx="50" cy="22" r="3" fill="#06B6D4" />
+      <circle cx="78" cy="50" r="3" fill="#06B6D4" />
+      <circle cx="50" cy="78" r="3" fill="#06B6D4" />
+      <circle cx="22" cy="50" r="3" fill="#06B6D4" />
+      {/* Letters CCA */}
+      <text x="50" y="55" fill="#FFFFFF" fontSize="13" fontWeight="900" textAnchor="middle" letterSpacing="1">CCA</text>
+      <text x="50" y="66" fill="#06B6D4" fontSize="6" fontWeight="bold" textAnchor="middle">BIOLOGY</text>
+      <defs>
+        <linearGradient id="logoGrad" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#0F172A" />
+          <stop offset="1" stopColor="#1E293B" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+
+  return (
+    <div className={`min-h-screen font-sans transition-colors duration-300 ${
+      theme === 'dark' 
+        ? 'bg-slate-950 text-slate-100 selection:bg-cyan-500 selection:text-slate-900' 
+        : 'bg-slate-50 text-slate-900 selection:bg-blue-600 selection:text-white'
+    }`}>
+      
+      {/* Background Animated Particles System (CSS-driven) */}
+      {theme === 'dark' && (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-900/20 rounded-full blur-[120px] animate-pulse"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-900/20 rounded-full blur-[120px] animate-pulse delay-1000"></div>
+          {/* Subtle star/particle simulation */}
+          <div className="stars-container opacity-40"></div>
+        </div>
+      )}
+
+      {/* --- HEADER --- */}
+      <header className="sticky top-0 z-40 backdrop-blur-md border-b border-slate-200/10 bg-opacity-70 flex justify-between items-center px-4 md:px-8 py-3 max-w-7xl mx-auto w-full">
+        <div className="flex items-center gap-3">
+          <CCALogo className="h-10 w-10 md:h-12 md:w-12" />
+          <div>
+            <h1 className="text-lg md:text-xl font-extrabold tracking-tight bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+              CCA ACADEMY
+            </h1>
+            <p className="text-[10px] md:text-xs text-slate-400 tracking-wider font-semibold uppercase">Sir Jawad • Testing Portal</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4">
+          {/* Theme Toggle */}
+          <button 
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            className={`p-2 rounded-lg border transition-all duration-200 ${
+              theme === 'dark' 
+                ? 'border-slate-800 bg-slate-900/50 hover:bg-slate-800 text-amber-400' 
+                : 'border-slate-200 bg-white hover:bg-slate-100 text-slate-800'
+            }`}
+            title="Toggle Theme"
+          >
+            {theme === 'dark' ? (
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 9H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.364l-.707-.707M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+              </svg>
+            )}
+          </button>
+
+          {/* Dynamic timer display in header if quiz is active */}
+          {screen === 'quiz' && (
+            <div className={`px-3 py-1.5 rounded-full font-mono text-sm md:text-base border flex items-center gap-2 ${
+              timeLeft < 300 
+                ? 'border-red-500 bg-red-500/10 text-red-500 animate-pulse' 
+                : theme === 'dark' ? 'border-slate-800 bg-slate-900/50 text-cyan-400' : 'border-slate-200 bg-white text-blue-600'
+            }`}>
+              <span className="relative flex h-2.5 w-2.5">
+                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${timeLeft < 300 ? 'bg-red-500' : 'bg-cyan-500'}`}></span>
+                <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${timeLeft < 300 ? 'bg-red-600' : 'bg-cyan-600'}`}></span>
+              </span>
+              {formatTime(timeLeft)}
+            </div>
+          )}
+        </div>
+      </header>
+
+      {/* --- MAIN BODY CONTAINER --- */}
+      <main className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 py-6 flex flex-col items-center justify-center min-h-[calc(100vh-80px)]">
+
+        {/* =========================================
+            1. STUDENT WELCOME / INITIAL LOGIN
+           ========================================= */}
+        {screen === 'welcome' && (
+          <div className="w-full max-w-2xl transform transition-all duration-300">
+            <div className={`rounded-2xl p-6 md:p-10 border shadow-2xl backdrop-blur-xl ${
+              theme === 'dark' 
+                ? 'bg-slate-900/60 border-slate-800/80 shadow-cyan-950/20' 
+                : 'bg-white border-slate-200 shadow-slate-200/50'
+            }`}>
+              {/* Portal Intro Graphic */}
+              <div className="flex flex-col items-center text-center mb-8">
+                <CCALogo className="h-20 w-20 mb-4 animate-bounce duration-1000" />
+                <span className="px-3 py-1 text-xs font-semibold uppercase tracking-widest bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 rounded-full mb-2">
+                  MDCAT Advanced Biology Prep
+                </span>
+                <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
+                  CCA Online Testing Portal
+                </h2>
+                <p className={`mt-2 text-sm sm:text-base ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
+                  Topic: <strong className="text-cyan-400">7. Nucleolus & 8. Ribosome Biogenesis</strong>
+                </p>
+                <div className="mt-1 text-xs text-slate-400 bg-slate-800/30 px-3 py-1 rounded-full border border-slate-700/30">
+                  Total MCQs: 30 • Time Limit: 30 Mins • Instructor: <span className="text-white font-semibold">Sir Jawad</span>
+                </div>
+              </div>
+
+              {/* Login Form */}
+              <form onSubmit={handleStartQuiz} className="space-y-5">
+                <div>
+                  <label className={`block text-sm font-semibold mb-1.5 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>
+                    Student Full Name <span className="text-red-500">*</span>
+                  </label>
+                  <input 
+                    type="text" 
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="Enter your registered full name"
+                    className={`w-full px-4 py-3 rounded-xl border font-medium focus:ring-2 focus:ring-cyan-500 focus:outline-none transition-all ${
+                      theme === 'dark' 
+                        ? 'bg-slate-950 border-slate-800 text-slate-100 placeholder-slate-600' 
+                        : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400'
+                    }`}
+                  />
+                </div>
+
+                <div>
+                  <label className={`block text-sm font-semibold mb-1.5 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>
+                    Father's Name <span className="text-red-500">*</span>
+                  </label>
+                  <input 
+                    type="text" 
+                    value={fatherName}
+                    onChange={(e) => setFatherName(e.target.value)}
+                    placeholder="Enter your father's name"
+                    className={`w-full px-4 py-3 rounded-xl border font-medium focus:ring-2 focus:ring-cyan-500 focus:outline-none transition-all ${
+                      theme === 'dark' 
+                        ? 'bg-slate-950 border-slate-800 text-slate-100 placeholder-slate-600' 
+                        : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400'
+                    }`}
+                  />
+                </div>
+
+                {errorMsg && (
+                  <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg text-sm font-semibold flex items-center gap-2">
+                    <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    {errorMsg}
+                  </div>
+                )}
+
+                {/* Important Instructions Box */}
+                <div className={`p-4 rounded-xl border text-xs leading-relaxed space-y-1.5 ${
+                  theme === 'dark' ? 'bg-slate-950/50 border-slate-800/80 text-slate-400' : 'bg-slate-50 border-slate-200 text-slate-600'
+                }`}>
+                  <h4 className="font-bold text-cyan-400 uppercase tracking-wider mb-1">MDCAT Testing Instructions:</h4>
+                  <p>✔ This testing console strictly replicates top-tier academic portals.</p>
+                  <p>✔ <strong>30 conceptual MDCAT questions</strong> based on ultrastructure, biogenesis, and chemistry of the nucleolus.</p>
+                  <p>✔ Disabling right-click and copying triggers automatically during execution.</p>
+                  <p>✔ Make sure you have a reliable internet; progress auto-saves locally.</p>
+                </div>
+
+                <button 
+                  type="submit"
+                  className="w-full py-4 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-extrabold rounded-xl transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg shadow-cyan-500/20 hover:shadow-cyan-400/40 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                >
+                  INITIALIZE MDCAT TESTING SESSION
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* =========================================
+            2. ACTIVE INTERACTIVE QUIZ INTERFACE
+           ========================================= */}
+        {screen === 'quiz' && (
+          <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            
+            {/* Left/Main Column: Question Card */}
+            <div className="lg:col-span-8 space-y-4">
+              
+              {/* Question Header Card */}
+              <div className={`rounded-2xl p-6 border shadow-xl backdrop-blur-md relative overflow-hidden ${
+                theme === 'dark' ? 'bg-slate-900/60 border-slate-800/80 shadow-cyan-950/5' : 'bg-white border-slate-200'
+              }`}>
+                {/* Visual Top Bar / Progress Bar */}
+                <div className="absolute top-0 left-0 right-0 h-1 bg-slate-800">
+                  <div 
+                    className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 transition-all duration-300"
+                    style={{ width: `${((currentQuestionIndex + 1) / QUIZ_QUESTIONS.length) * 100}%` }}
+                  />
+                </div>
+
+                <div className="flex justify-between items-center mb-6">
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase border ${
+                    theme === 'dark' ? 'bg-slate-950 border-slate-800 text-cyan-400' : 'bg-slate-100 border-slate-200 text-blue-600'
+                  }`}>
+                    Question {currentQuestionIndex + 1} of {QUIZ_QUESTIONS.length}
+                  </span>
+                  
+                  {/* Status Indicator Pill */}
+                  <span className={`text-xs px-2.5 py-0.5 rounded-full font-bold ${
+                    answers[currentQuestionIndex] !== undefined
+                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                      : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                  }`}>
+                    {answers[currentQuestionIndex] !== undefined ? '● Attempted' : '○ Pending'}
+                  </span>
+                </div>
+
+                {/* Question Text */}
+                <h3 className="text-xl md:text-2xl font-bold leading-relaxed mb-8">
+                  {/* Safely inject sub/sup markup or italicize biological names */}
+                  <span dangerouslySetInnerHTML={{ 
+                    __html: QUIZ_QUESTIONS[currentQuestionIndex].question
+                      .replace(/45S/g, '45S')
+                      .replace(/18S/g, '18S')
+                      .replace(/28S/g, '28S')
+                      .replace(/5\.8S/g, '5.8S')
+                      .replace(/5S/g, '5S')
+                      .replace(/80S/g, '80S')
+                      .replace(/40S/g, '40S')
+                      .replace(/60S/g, '60S')
+                      .replace(/Mg²⁺/g, 'Mg<sup>2+</sup>')
+                      .replace(/Ca²⁺/g, 'Ca<sup>2+</sup>')
+                      .replace(/Na⁺/g, 'Na<sup>+</sup>')
+                      .replace(/Fe²⁺/g, 'Fe<sup>2+</sup>')
+                  }} />
+                </h3>
+
+                {/* MCQ Options Display */}
+                <div className="space-y-3.5">
+                  {QUIZ_QUESTIONS[currentQuestionIndex].options.map((opt, optIdx) => {
+                    const isSelected = answers[currentQuestionIndex] === optIdx;
+                    return (
+                      <button
+                        key={optIdx}
+                        onClick={() => handleSelectOption(currentQuestionIndex, optIdx)}
+                        className={`w-full p-4 rounded-xl border-2 text-left transition-all duration-200 flex items-center justify-between group ${
+                          isSelected
+                            ? theme === 'dark'
+                              ? 'border-cyan-500 bg-cyan-950/20 text-white font-semibold'
+                              : 'border-blue-600 bg-blue-50/50 text-blue-900 font-semibold'
+                            : theme === 'dark'
+                              ? 'border-slate-800/80 bg-slate-950/40 hover:border-slate-700 hover:bg-slate-900/40 text-slate-300'
+                              : 'border-slate-200 bg-slate-50 hover:border-slate-300 hover:bg-slate-100 text-slate-800'
+                        }`}
+                      >
+                        <div className="flex items-center gap-4">
+                          <span className={`w-8 h-8 rounded-lg flex items-center justify-center font-extrabold text-sm border transition-all ${
+                            isSelected
+                              ? 'bg-gradient-to-br from-blue-600 to-cyan-500 text-white border-transparent'
+                              : theme === 'dark' ? 'bg-slate-900 border-slate-800 group-hover:border-slate-600' : 'bg-white border-slate-300'
+                          }`}>
+                            {String.fromCharCode(65 + optIdx)}
+                          </span>
+                          <span className="text-base" dangerouslySetInnerHTML={{
+                            __html: opt.text
+                              .replace(/Mg²⁺/g, 'Mg<sup>2+</sup>')
+                              .replace(/Ca²⁺/g, 'Ca<sup>2+</sup>')
+                              .replace(/Na⁺/g, 'Na<sup>+</sup>')
+                              .replace(/Fe²⁺/g, 'Fe<sup>2+</sup>')
+                          }} />
+                        </div>
+                        
+                        {/* Selected Indicator Circle */}
+                        <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all ${
+                          isSelected 
+                            ? 'border-cyan-400 bg-cyan-400 text-slate-900' 
+                            : theme === 'dark' ? 'border-slate-700' : 'border-slate-300'
+                        }`}>
+                          {isSelected && (
+                            <svg className="w-3.5 h-3.5 stroke-2 stroke-current" fill="none" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* MCQ Navigation Controls */}
+                <div className="flex justify-between items-center mt-10 pt-6 border-t border-slate-800/80">
+                  <button
+                    onClick={handlePrev}
+                    disabled={currentQuestionIndex === 0}
+                    className={`px-5 py-2.5 rounded-xl border flex items-center gap-2 font-bold transition-all ${
+                      currentQuestionIndex === 0
+                        ? 'opacity-40 cursor-not-allowed'
+                        : theme === 'dark'
+                          ? 'border-slate-800 bg-slate-950 text-slate-300 hover:bg-slate-900'
+                          : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
+                    }`}
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    PREVIOUS
+                  </button>
+
+                  <div className="hidden sm:flex items-center gap-2">
+                    {/* Concept Hint Box toggle */}
+                    <button
+                      onClick={() => setShowHint(!showHint)}
+                      className={`px-4 py-2 rounded-xl border text-xs font-bold transition-all flex items-center gap-1.5 uppercase ${
+                        showHint 
+                          ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' 
+                          : theme === 'dark' ? 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200' : 'bg-slate-50 border-slate-200 text-slate-600 hover:text-slate-800'
+                      }`}
+                    >
+                      💡 {showHint ? 'Hide Hint' : 'Show Hint'}
+                    </button>
+                  </div>
+
+                  {currentQuestionIndex === QUIZ_QUESTIONS.length - 1 ? (
+                    <button
+                      onClick={() => setShowConfirmSubmit(true)}
+                      className="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-extrabold rounded-xl transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-2"
+                    >
+                      SUBMIT QUIZ
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleNext}
+                      className={`px-5 py-2.5 rounded-xl border flex items-center gap-2 font-bold transition-all ${
+                        theme === 'dark'
+                          ? 'border-slate-800 bg-slate-950 text-slate-300 hover:bg-slate-900'
+                          : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
+                      }`}
+                    >
+                      NEXT
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+
+                {/* Show Hint area */}
+                {showHint && (
+                  <div className={`mt-5 p-4 rounded-xl border animate-fadeIn text-sm ${
+                    theme === 'dark' ? 'bg-slate-950/80 border-amber-500/20 text-slate-300' : 'bg-amber-500/5 border-amber-500/20 text-slate-800'
+                  }`}>
+                    <strong className="text-amber-400 font-bold block mb-1">MDCAT Conceptual Hint:</strong>
+                    <span dangerouslySetInnerHTML={{ __html: QUIZ_QUESTIONS[currentQuestionIndex].hint }} />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Right Column: Question Navigator Box & Info summary */}
+            <div className="lg:col-span-4 space-y-4">
+              
+              {/* Student info Summary */}
+              <div className={`rounded-xl p-4 border ${
+                theme === 'dark' ? 'bg-slate-900/50 border-slate-800/80' : 'bg-white border-slate-200'
+              }`}>
+                <h4 className="text-xs uppercase tracking-widest text-slate-400 font-bold mb-2">Student Info</h4>
+                <div className="space-y-1.5 text-sm">
+                  <p className="flex justify-between font-semibold">
+                    <span>Name:</span>
+                    <span className="text-cyan-400">{fullName}</span>
+                  </p>
+                  <p className="flex justify-between text-slate-400">
+                    <span>F. Name:</span>
+                    <span className="text-slate-300">{fatherName}</span>
+                  </p>
+                </div>
+              </div>
+
+              {/* Navigator Panel */}
+              <div className={`rounded-2xl p-5 border shadow-lg ${
+                theme === 'dark' ? 'bg-slate-900/60 border-slate-800/80' : 'bg-white border-slate-200'
+              }`}>
+                <h3 className="text-md font-extrabold tracking-wide uppercase mb-4 flex items-center justify-between">
+                  <span>Question Navigator</span>
+                  <span className="text-xs font-semibold text-slate-400">{Object.keys(answers).length}/30 Attempted</span>
+                </h3>
+
+                <div className="grid grid-cols-5 gap-2.5">
+                  {QUIZ_QUESTIONS.map((_, idx) => {
+                    const isCurrent = currentQuestionIndex === idx;
+                    const isAttempted = answers[idx] !== undefined;
+                    const isWasVisited = visited[idx];
+                    
+                    let btnStyle = '';
+                    if (isCurrent) {
+                      btnStyle = theme === 'dark' 
+                        ? 'bg-cyan-500 text-slate-950 font-black ring-2 ring-cyan-400 ring-offset-2 ring-offset-slate-900' 
+                        : 'bg-blue-600 text-white font-black ring-2 ring-blue-500 ring-offset-2';
+                    } else if (isAttempted) {
+                      btnStyle = theme === 'dark' 
+                        ? 'bg-emerald-950/50 border-emerald-500/50 text-emerald-400 border font-bold' 
+                        : 'bg-emerald-100 border-emerald-300 text-emerald-800 border font-bold';
+                    } else if (isWasVisited) {
+                      btnStyle = theme === 'dark' 
+                        ? 'bg-slate-950 border-slate-800 text-slate-400 border hover:border-slate-600' 
+                        : 'bg-slate-100 border-slate-300 text-slate-700 border hover:bg-slate-200';
+                    } else {
+                      btnStyle = theme === 'dark' 
+                        ? 'bg-slate-950 border-slate-800 text-slate-600 border' 
+                        : 'bg-slate-50 border-slate-200 text-slate-400 border';
+                    }
+
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => handleJumpToQuestion(idx)}
+                        className={`h-10 rounded-lg text-xs transition-all duration-150 flex items-center justify-center ${btnStyle}`}
+                      >
+                        {idx + 1}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Status Guide */}
+                <div className="mt-6 pt-4 border-t border-slate-800/50 grid grid-cols-2 gap-3 text-[11px] font-semibold">
+                  <div className="flex items-center gap-1.5 text-emerald-400">
+                    <span className="w-3 h-3 rounded bg-emerald-500/20 border border-emerald-500/40 block"></span>
+                    Attempted
+                  </div>
+                  <div className="flex items-center gap-1.5 text-slate-400">
+                    <span className="w-3 h-3 rounded bg-slate-950 border border-slate-800 block"></span>
+                    Unattempted
+                  </div>
+                  <div className="flex items-center gap-1.5 text-cyan-400">
+                    <span className="w-3 h-3 rounded bg-cyan-500 block"></span>
+                    Current Question
+                  </div>
+                  <div className="flex items-center gap-1.5 text-slate-500">
+                    <span className="w-3 h-3 rounded bg-slate-950 border border-slate-800 block"></span>
+                    Skipped (Visited)
+                  </div>
+                </div>
+
+                <div className="mt-6">
+                  <button
+                    onClick={() => setShowConfirmSubmit(true)}
+                    className="w-full py-3 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white text-xs font-black tracking-widest rounded-xl transition-all shadow-md uppercase focus:outline-none"
+                  >
+                    🚨 TERMINATE & SUBMIT SESSION
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        )}
+
+        {/* =========================================
+            3. LUXURY RESULTS DASHBOARD & ANALYSIS
+           ========================================= */}
+        {screen === 'results' && (
+          <div className="w-full max-w-5xl space-y-8 animate-fadeIn">
+            
+            {/* Top Score Summary Banner */}
+            <div className={`rounded-2xl p-6 md:p-8 border shadow-2xl relative overflow-hidden ${
+              theme === 'dark' 
+                ? 'bg-slate-900/60 border-slate-800/80 shadow-cyan-950/10' 
+                : 'bg-white border-slate-200 shadow-slate-200/50'
+            }`}>
+              
+              {/* Brand Watermark on Right */}
+              <div className="absolute right-4 bottom-4 opacity-10 hidden md:block">
+                <CCALogo className="h-44 w-44" />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                
+                {/* Score Circular Progress Meter */}
+                <div className="md:col-span-4 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-slate-800/50 pb-6 md:pb-0 md:pr-6">
+                  <div className="relative w-40 h-40 flex items-center justify-center">
+                    {/* SVG Radial Progress */}
+                    <svg className="absolute inset-0 w-full h-full transform -rotate-95">
+                      <circle cx="80" cy="80" r="70" className="stroke-slate-800" strokeWidth="10" fill="transparent" />
+                      <circle 
+                        cx="80" 
+                        cy="80" 
+                        r="70" 
+                        className="stroke-cyan-500 transition-all duration-1000" 
+                        strokeWidth="10" 
+                        fill="transparent" 
+                        strokeDasharray={440}
+                        strokeDashoffset={440 - (440 * quizScore.percentage) / 100}
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    
+                    <div className="text-center z-10">
+                      <span className="text-4xl font-black block">{quizScore.percentage}%</span>
+                      <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest block">Accuracy Score</span>
+                    </div>
+                  </div>
+
+                  {/* Badge */}
+                  <span className={`mt-4 px-3.5 py-1 rounded-full text-xs font-black tracking-wider uppercase border ${
+                    quizScore.percentage >= 85 
+                      ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
+                      : quizScore.percentage >= 60 
+                        ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' 
+                        : 'bg-red-500/10 border-red-500/20 text-red-400'
+                  }`}>
+                    {quizScore.percentage >= 85 ? '🌟 Elite Merit list' : quizScore.percentage >= 60 ? '👍 Standard Cleared' : '⚠️ Refresher Needed'}
+                  </span>
+                </div>
+
+                {/* Score Stats Detail Grid */}
+                <div className="md:col-span-8 space-y-6">
+                  <div>
+                    <h4 className="text-xs uppercase tracking-widest font-black text-slate-400">CCA MDCAT Performance Scorecard</h4>
+                    <h2 className="text-3xl font-extrabold mt-1">{fullName}</h2>
+                    <p className="text-sm text-slate-400">Father's Name: <strong className="text-slate-200">{fatherName}</strong></p>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div className={`p-4 rounded-xl border ${theme === 'dark' ? 'bg-slate-950/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+                      <span className="text-slate-400 text-xs font-semibold block">Total MCQs</span>
+                      <span className="text-2xl font-black">{quizScore.total}</span>
+                    </div>
+                    <div className="p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5">
+                      <span className="text-emerald-400 text-xs font-semibold block">Correct answers</span>
+                      <span className="text-2xl font-black text-emerald-400">{quizScore.correct}</span>
+                    </div>
+                    <div className="p-4 rounded-xl border border-red-500/20 bg-red-500/5">
+                      <span className="text-red-400 text-xs font-semibold block">Wrong answers</span>
+                      <span className="text-2xl font-black text-red-400">{quizScore.incorrect}</span>
+                    </div>
+                    <div className={`p-4 rounded-xl border ${theme === 'dark' ? 'bg-slate-950/50 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
+                      <span className="text-slate-400 text-xs font-semibold block">Unattempted</span>
+                      <span className="text-2xl font-black">{quizScore.unattempted}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-4 pt-2">
+                    <button
+                      onClick={handlePrintResult}
+                      className="px-6 py-3.5 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-extrabold rounded-xl transition-all shadow-lg flex items-center gap-2 text-sm focus:outline-none"
+                    >
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                      </svg>
+                      DOWNLOAD PRINTABLE REPORT (PDF)
+                    </button>
+
+                    <button
+                      onClick={handleRetakeQuiz}
+                      className={`px-6 py-3.5 border rounded-xl font-extrabold transition-all text-sm flex items-center gap-2 ${
+                        theme === 'dark'
+                          ? 'border-slate-800 bg-slate-950 text-slate-300 hover:bg-slate-900'
+                          : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-100'
+                      }`}
+                    >
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H18" />
+                      </svg>
+                      RETAKE SESSION
+                    </button>
+                  </div>
+
+                  {/* PDF Download Troubleshooting Hint */}
+                  <div className="text-xs text-slate-500 flex items-center gap-1.5">
+                    <svg className="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span><strong>No Error PDF Export:</strong> On mobile or PC, click download and simply select <strong>"Save as PDF"</strong> under the Printer destination. It renders a beautifully clean high-res vector report!</span>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+
+            {/* Comprehensive MCQ Review & Correction Board */}
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="text-xl font-extrabold tracking-tight">Question Review & Explanatory Analysis</h3>
+                <span className="text-xs text-slate-400">Total Questions: 30</span>
+              </div>
+
+              <div className="space-y-4">
+                {QUIZ_QUESTIONS.map((q, idx) => {
+                  const studentAnswerIdx = answers[idx];
+                  const isCorrect = studentAnswerIdx !== undefined && q.options[studentAnswerIdx].isCorrect;
+                  const correctOptionIdx = q.options.findIndex(o => o.isCorrect);
+
+                  return (
+                    <div 
+                      key={idx}
+                      className={`rounded-xl border p-5 md:p-6 transition-all duration-200 ${
+                        studentAnswerIdx === undefined
+                          ? theme === 'dark' ? 'border-amber-500/20 bg-amber-500/5' : 'border-amber-200 bg-amber-50/20'
+                          : isCorrect
+                            ? theme === 'dark' ? 'border-emerald-500/20 bg-emerald-500/5' : 'border-emerald-200 bg-emerald-50/20'
+                            : theme === 'dark' ? 'border-red-500/20 bg-red-500/5' : 'border-red-200 bg-red-50/20'
+                      }`}
+                    >
+                      <div className="flex justify-between items-start mb-4">
+                        <span className={`px-2.5 py-1 rounded-lg text-xs font-black uppercase ${
+                          studentAnswerIdx === undefined
+                            ? 'bg-amber-500/10 text-amber-400'
+                            : isCorrect
+                              ? 'bg-emerald-500/10 text-emerald-400'
+                              : 'bg-red-500/10 text-red-400'
+                        }`}>
+                          {studentAnswerIdx === undefined ? 'Unattempted' : isCorrect ? 'Correct' : 'Incorrect'}
+                        </span>
+                        
+                        <span className="text-xs text-slate-400 font-bold">MCQ {idx + 1}</span>
+                      </div>
+
+                      {/* Question */}
+                      <h4 className="text-base md:text-lg font-bold mb-4 leading-relaxed">
+                        <span dangerouslySetInnerHTML={{ 
+                          __html: q.question
+                            .replace(/Mg²⁺/g, 'Mg<sup>2+</sup>')
+                            .replace(/Ca²⁺/g, 'Ca<sup>2+</sup>')
+                            .replace(/Na⁺/g, 'Na<sup>+</sup>')
+                            .replace(/Fe²⁺/g, 'Fe<sup>2+</sup>')
+                        }} />
+                      </h4>
+
+                      {/* Options Analysis Grid */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                        {q.options.map((opt, optIdx) => {
+                          const isStudentSelected = studentAnswerIdx === optIdx;
+                          const isOptCorrect = opt.isCorrect;
+
+                          let cardStyle = '';
+                          if (isOptCorrect) {
+                            cardStyle = theme === 'dark' 
+                              ? 'border-emerald-500/60 bg-emerald-950/30 text-white font-semibold' 
+                              : 'border-emerald-500 bg-emerald-50 text-emerald-900 font-semibold';
+                          } else if (isStudentSelected && !isOptCorrect) {
+                            cardStyle = theme === 'dark' 
+                              ? 'border-red-500/60 bg-red-950/30 text-white font-semibold' 
+                              : 'border-red-500 bg-red-50 text-red-900 font-semibold';
+                          } else {
+                            cardStyle = theme === 'dark' 
+                              ? 'border-slate-800 bg-slate-950/40 text-slate-400' 
+                              : 'border-slate-200 bg-slate-50 text-slate-700';
+                          }
+
+                          return (
+                            <div key={optIdx} className={`p-3 rounded-xl border text-sm flex items-center justify-between ${cardStyle}`}>
+                              <span dangerouslySetInnerHTML={{
+                                __html: `<span class="font-extrabold mr-2">${String.fromCharCode(65 + optIdx)})</span> ${
+                                  opt.text
+                                    .replace(/Mg²⁺/g, 'Mg<sup>2+</sup>')
+                                    .replace(/Ca²⁺/g, 'Ca<sup>2+</sup>')
+                                    .replace(/Na⁺/g, 'Na<sup>+</sup>')
+                                    .replace(/Fe²⁺/g, 'Fe<sup>2+</sup>')
+                                }`
+                              }} />
+                              
+                              <div className="flex items-center gap-1.5 flex-shrink-0">
+                                {isOptCorrect && <span className="text-emerald-400 text-xs font-bold flex items-center gap-0.5">✔ Correct</span>}
+                                {isStudentSelected && !isOptCorrect && <span className="text-red-400 text-xs font-bold flex items-center gap-0.5">✘ Your Choice</span>}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* MDCAT-Oriented Explanatory Rationale */}
+                      <div className={`p-4 rounded-xl text-xs leading-relaxed border ${
+                        theme === 'dark' ? 'bg-slate-950/80 border-slate-800 text-slate-300' : 'bg-slate-100/50 border-slate-200 text-slate-800'
+                      }`}>
+                        <span className="text-cyan-400 font-extrabold uppercase tracking-widest block mb-1">MDCAT Conceptual Rationale</span>
+                        <p dangerouslySetInnerHTML={{ 
+                          __html: q.explanation 
+                            .replace(/Mg²⁺/g, 'Mg<sup>2+</sup>')
+                            .replace(/Ca²⁺/g, 'Ca<sup>2+</sup>')
+                            .replace(/Na⁺/g, 'Na<sup>+</sup>')
+                            .replace(/Fe²⁺/g, 'Fe<sup>2+</sup>')
+                        }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+          </div>
+        )}
+
+      </main>
+
+      {/* --- FOOTER --- */}
+      <footer className="py-8 border-t border-slate-800/40 mt-16 text-center max-w-7xl mx-auto px-4">
+        <p className="text-xs text-slate-500 font-medium">
+          © {new Date().getFullYear()} Concept Clarification Academy (CCA) • All Rights Reserved.
+        </p>
+        <p className="text-[10px] text-slate-600 mt-1.5">
+          Designed professionally for MDCAT students. Under supervision of Sir Jawad.
+        </p>
+      </footer>
+
+
+      {/* =========================================
+          4. SUBMIT CONFIRMATION MODAL (CUSTOM POPUP)
+         ========================================= */}
+      {showConfirmSubmit && (
+        <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className={`w-full max-w-md p-6 rounded-2xl border shadow-2xl animate-scaleUp ${
+            theme === 'dark' ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-white border-slate-200 text-slate-900'
+          }`}>
+            <div className="text-center">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 mb-4">
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              
+              <h3 className="text-lg font-bold">Terminate Session & Submit?</h3>
+              <p className={`text-sm mt-2 leading-relaxed ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                Are you absolutely sure you want to finalize and submit your answers? You cannot change your choices after submitting.
+              </p>
+              
+              <div className="mt-4 p-3 bg-slate-950/50 rounded-xl border border-slate-800/80 text-xs">
+                <strong>Attempt Status:</strong> {Object.keys(answers).length} answered, {30 - Object.keys(answers).length} unattempted.
+              </div>
+            </div>
+
+            <div className="mt-6 flex gap-3">
+              <button
+                onClick={() => setShowConfirmSubmit(false)}
+                className={`flex-1 py-3 border rounded-xl font-bold transition-all text-xs ${
+                  theme === 'dark'
+                    ? 'border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700'
+                    : 'border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-200'
+                }`}
+              >
+                GO BACK
+              </button>
+              
+              <button
+                onClick={triggerManualSubmit}
+                className="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl transition-all text-xs shadow-md shadow-red-900/30"
+              >
+                SUBMIT NOW
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+      {/* =======================================================
+          5. NO-ERROR HIGH-RESOLUTION PRINT / PDF SHEET STYLES
+          (This completely bypasses fragile canvas libraries)
+         ======================================================= */}
+      <style>{`
+        /* Smooth Entrance Animations */
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes scaleUp {
+          from { opacity: 0; transform: scale(0.95); }
+          to { opacity: 1; transform: scale(1); }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .animate-scaleUp {
+          animation: scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* DEDICATED PRINT / PDF OUTPUT RULES */
+        @media print {
+          /* Hide all interactive components, timers, gradients */
+          body {
+            background: #FFFFFF !important;
+            color: #000000 !important;
+            font-size: 12pt !important;
+          }
+          header, footer, button, .stars-container, .stars, .star, .fixed, .pointer-events-none {
+            display: none !important;
+          }
+          main {
+            padding: 0 !important;
+            margin: 0 !important;
+            max-width: 100% !important;
+            min-height: auto !important;
+          }
+          
+          /* Force standard simple view for printable sheet */
+          .lg\\:col-span-8, .lg\\:col-span-12, .lg\\:col-span-4 {
+            width: 100% !important;
+            display: block !important;
+          }
+
+          /* Structure the Report specifically for official submission */
+          #print-report-container {
+            display: block !important;
+          }
+        }
+      `}</style>
+
+      {/* --- HIDDEN PRINT TEMPLATE --- */}
+      {/* This element displays beautifully during printing as an official CCA certified PDF sheet */}
+      <div id="print-report-container" className="hidden print:block p-8 font-sans text-slate-900 bg-white max-w-4xl mx-auto">
+        <div className="border-4 border-double border-slate-800 p-6 rounded-lg">
+          
+          {/* Official CCA Header Banner */}
+          <div className="flex justify-between items-center border-b-2 border-slate-800 pb-6 mb-6">
+            <div className="flex items-center gap-4">
+              <CCALogo className="h-16 w-16" />
+              <div>
+                <h1 className="text-3xl font-black tracking-tight text-slate-950 uppercase">Concept Clarification Academy</h1>
+                <p className="text-sm font-extrabold tracking-wider text-slate-700">MDCAT ADVANCED TESTING BOARD • CH. 7 & 8</p>
+                <p className="text-xs text-slate-500 font-bold">Instructor: Sir Jawad Ali</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <span className="text-xs font-black uppercase tracking-widest px-3 py-1 border-2 border-slate-950 bg-slate-100 rounded-full">OFFICIAL SCORECARD</span>
+            </div>
+          </div>
+
+          {/* Student Profile Block */}
+          <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-300 mb-6">
+            <div>
+              <p className="text-xs text-slate-500 font-bold uppercase">Student Full Name</p>
+              <p className="text-lg font-black text-slate-950 uppercase">{fullName || "Not Entered"}</p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500 font-bold uppercase">Father's Name</p>
+              <p className="text-lg font-black text-slate-950 uppercase">{fatherName || "Not Entered"}</p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500 font-bold uppercase">Examination Subject</p>
+              <p className="text-sm font-bold text-slate-800 uppercase">MDCAT Biology: Nucleolus & Ribosome Biogenesis</p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500 font-bold uppercase">Examination Date & Time</p>
+              <p className="text-sm font-bold text-slate-800 uppercase">{new Date().toLocaleString()}</p>
+            </div>
+          </div>
+
+          {/* Detailed Performance Metric Sheet */}
+          <div className="grid grid-cols-4 gap-4 mb-6 text-center">
+            <div className="border border-slate-300 p-3 rounded-lg">
+              <span className="text-xs font-bold text-slate-500 uppercase block">Total MCQs</span>
+              <span className="text-xl font-black block">{quizScore.total}</span>
+            </div>
+            <div className="border border-slate-300 p-3 rounded-lg bg-emerald-50">
+              <span className="text-xs font-bold text-emerald-700 uppercase block">Obtained / Correct</span>
+              <span className="text-xl font-black text-emerald-700 block">{quizScore.correct}</span>
+            </div>
+            <div className="border border-slate-300 p-3 rounded-lg bg-red-50">
+              <span className="text-xs font-bold text-red-700 uppercase block">Incorrect / Wrong</span>
+              <span className="text-xl font-black text-red-700 block">{quizScore.incorrect}</span>
+            </div>
+            <div className="border-2 border-slate-950 p-3 rounded-lg bg-slate-950 text-white">
+              <span className="text-xs font-bold uppercase tracking-widest block">Percentage</span>
+              <span className="text-xl font-black block">{quizScore.percentage}%</span>
+            </div>
+          </div>
+
+          {/* Certificate Authorization Row */}
+          <div className="flex justify-between items-center border-t border-slate-300 pt-10 mt-12 text-xs">
+            <div className="text-center w-1/3">
+              <div className="h-0.5 bg-slate-400 w-full mb-2"></div>
+              <p className="font-bold text-slate-600 uppercase">Examiner / Controller Office</p>
+            </div>
+            
+            <div className="text-center w-1/3">
+              <div className="flex justify-center mb-1">
+                <CCALogo className="h-10 w-10 opacity-70" />
+              </div>
+              <p className="font-bold text-slate-400 uppercase tracking-widest">CCA SECURE SEAL</p>
+            </div>
+
+            <div className="text-center w-1/3">
+              <div className="h-0.5 bg-slate-800 w-full mb-2"></div>
+              <p className="font-black text-slate-900 uppercase">SIR JAWAD ALI (HEAD OF BIOLOGY)</p>
+            </div>
+          </div>
+
+          {/* Detailed Question Key Sheet (Printed below the report summary) */}
+          <div className="mt-12 pt-6 border-t-2 border-dashed border-slate-400">
+            <h2 className="text-lg font-black uppercase text-slate-950 mb-4">Complete Attempted Question Key</h2>
+            
+            <div className="space-y-4">
+              {QUIZ_QUESTIONS.map((q, idx) => {
+                const studentAnswerIdx = answers[idx];
+                const isCorrect = studentAnswerIdx !== undefined && q.options[studentAnswerIdx].isCorrect;
+                
+                return (
+                  <div key={idx} className="border-b border-slate-200 pb-3 text-xs">
+                    <p className="font-bold mb-1">
+                      MCQ {idx + 1}: <span dangerouslySetInnerHTML={{ __html: q.question }} />
+                    </p>
+                    <p className="text-slate-600 flex gap-4">
+                      <span><strong>Correct Option:</strong> {String.fromCharCode(65 + q.options.findIndex(o => o.isCorrect))}</span>
+                      <span><strong>Your Answer:</strong> {studentAnswerIdx !== undefined ? String.fromCharCode(65 + studentAnswerIdx) : "Skipped"}</span>
+                      <span className={`font-extrabold ${isCorrect ? 'text-emerald-700' : 'text-red-700'}`}>
+                        {studentAnswerIdx === undefined ? 'Unattempted' : isCorrect ? 'CORRECT' : 'INCORRECT'}
+                      </span>
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  );
+}
